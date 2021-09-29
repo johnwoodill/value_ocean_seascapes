@@ -389,3 +389,25 @@ mdat2
 mdat2.CLASS.unique()
 
 mdat2.to_csv('data/wcpo_effort_seascape_2012_2019.csv', index=False)
+
+
+
+# Check catch numbers
+import pandas as pd 
+
+mdat = pd.read_csv('data/wcpo_effort_seascape_2012_2019.csv')
+
+
+# Index(['month', 'cwp_grid', 'hhooks', 'alb_c', 'alb_n', 'yft_c', 'yft_n',
+#        'bet_c', 'bet_n', 'mls_c', 'mls_n', 'blm_c', 'blm_n', 'bum_c', 'bum_n',
+#        'swo_c', 'swo_n', 'bsh_n', 'fal_n', 'mak_n', 'ocs_n', 'thr_n', 'ham_n',
+#        'por_n', 'oth_c', 'oth_n', 'lat', 'lon', 'dist', 'CLASS', 'P'],
+#       dtype='object')
+
+mdat.groupby('year').sum()['bet_c']
+mdat.groupby('year').sum()['yft_c']
+mdat.groupby('year').sum()['swo_c']
+
+
+
+

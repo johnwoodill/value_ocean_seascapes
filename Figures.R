@@ -1,10 +1,14 @@
 library(tidyverse)
 library(wesanderson)
+library(sf)
 
 setwd("~/Projects/value_ocean_seascapes/")
 
+nipy_spectral <- c("#000000", "#6a009d", "#0035dd", "#00a4bb", "#009b0f",
+                   "#00e100", "#ccf900", "#ffb000", "#e50000")
+
 seascape_labels <- data.frame(seascape_class = seq(1, 33),
-                              seascape_name = c("NORTH ATLANTIC SPRING, ACC TRANSITION",
+                              seascape_name = c("NORTH ATLANTIC SPRING, ACC TRANSITION",   
                                                 "SUBPOLAR TRANSITION",
                                                 "TROPICAL SUBTROPICAL TRANSITION",
                                                 "Western Warm Pool Subtropical",
@@ -127,4 +131,51 @@ p2 <- ggplot(pdat, aes(year, bet_c_sea_perc, group=seascape_name, color=seascape
 plot_grid(p1, p2, ncol=1, rel_heights = c(3, 1))
 
 ggsave("figures/effort_seascape_barchart.png", width=12, height=10)
+
+
+
+
+
+# World polygons from the maps package
+world_shp <- sf::st_as_sf(maps::map("world", wrap = c(0, 360), plot = FALSE, fill = TRUE))
+
+# Load EEZ polygons
+eezs <- read_sf("~/Projects/World-fishing-rich-diver-equit/data/World_EEZ_v11_20191118_HR_0_360/", layer = "eez_v11_0_360") %>% 
+  filter(POL_TYPE == '200NM') # select the 200 nautical mile polygon layer
+
+mpas <- read_sf('~/Projects/World-fishing-rich-diver-equit/data/mpa_shapefiles/vlmpa.shp')
+mpas <- st_shift_longitude(mpas)
+
+rfmos <- read_sf('~/Projects/World-fishing-rich-diver-equit/data/RFMO_shapefile/RFMO_coords.shp')
+
+
+seascape = read_csv("data/seascapes/seascapes_MONTHLY_CLASS_PROB_2019.csv")
+seascapedat = filter(seascape, CLASS %in% c(4, 5, 8) & month == 10 & year == 2019)
+sdat = filter(dat, CLASS %in% c(4, 5, 8) & month == 10 & year == 2019)
+sdat$lat_lon = paste0(sdat$lat, "_", sdat$lon)
+
+ggplot() +
+  # geom_sf(data = eezs, color = 'grey', alpha = 0.5, fill = NA, size = 0.2) +
+  # geom_hex(data = seascapedat, aes(lon, lat, fill=factor(CLASS)), alpha = 0.8) +
+  geom_bin2d(data = seascapedat, aes(lon, lat, fill=factor(CLASS)), alpha = 0.8) +
+  geom_point(data = sdat, aes(lon, lat, color=log(1 + bet_c)), alpha = 0.8, shape=15, size=5) +
+  geom_sf(data = world_shp, fill = 'black', color = 'black',  size = 0.1)  +
+  # geom_sf(data = mpas, color = 'grey', alpha = 0.05, fill = NA, size = 0.1) +
+  scale_fill_viridis_d(direction = -1) +
+  coord_sf(xlim = c(120, 250), ylim = c(-40, 40), expand = FALSE) +
+  scale_color_gradientn(colors = nipy_spectral, limits = c(0, 6), breaks = seq(0, 6, 1)) +
+  theme_minimal() +
+  labs(x=NULL, y=NULL, fill=NULL) +
+  # theme(plot.title = element_text(hjust = 0.5),
+  #       legend.position = "right",
+  #       legend.title.align=0.5,
+  #       panel.spacing = unit(0.5, "lines"),
+  #       panel.border = element_rect(colour = "black", fill=NA, size=.5)) +
+  # guides(fill = guide_colorbar(title.position = "top", 
+  #                            direction = "vertical",
+  #                            frame.colour = "black",
+  #                            barwidth = .5,
+  #                            barheight = 17)) +
+  NULL
+
 
