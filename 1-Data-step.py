@@ -397,16 +397,18 @@ import pandas as pd
 
 mdat = pd.read_csv('data/wcpo_effort_seascape_2012_2019.csv')
 
-
+mdat = mdat[mdat['CLASS'].isin([4, 5, 8])]
 # Index(['month', 'cwp_grid', 'hhooks', 'alb_c', 'alb_n', 'yft_c', 'yft_n',
 #        'bet_c', 'bet_n', 'mls_c', 'mls_n', 'blm_c', 'blm_n', 'bum_c', 'bum_n',
 #        'swo_c', 'swo_n', 'bsh_n', 'fal_n', 'mak_n', 'ocs_n', 'thr_n', 'ham_n',
 #        'por_n', 'oth_c', 'oth_n', 'lat', 'lon', 'dist', 'CLASS', 'P'],
 #       dtype='object')
 
+mdat.groupby(['year', 'CLASS']).sum()['bet_c'].reset_index().sort_values(['CLASS', 'year'])
+mdat.groupby(['year', 'CLASS']).sum()['yft_c'].reset_index().sort_values(['CLASS', 'year'])
+mdat.groupby(['year', 'CLASS']).sum()['swo_c'].reset_index().sort_values(['CLASS', 'year'])
+
 mdat.groupby('year').sum()['bet_c']
-mdat.groupby('year').sum()['yft_c']
-mdat.groupby('year').sum()['swo_c']
 
 
 
