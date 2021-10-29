@@ -17,16 +17,41 @@ from lib.capn import *
 plt.style.use('seaborn-whitegrid')
 
 
+#%%
+def gen_param(k, q, price, cost, alpha, gamma, y, delta, order, upperK, lowerK, nodes):
+  '''
+  Generate params for estimation
+  '''
+  param = pd.DataFrame({'r': [r]})
+  param['k'] = k                   # carry capacity (mt)
+  param['q'] = q                   # catchability coefficient q = Catch/(Hooks * Biomass)
+  param['price'] = price           # price 
+  param['cost'] = cost             # cost
+  param['alpha'] = alpha           # tech parameter
+  param['gamma'] = gamma           # pre-ITQ management parameter
+  param['y'] = y                   # system equivalence parameter
+  param['delta'] = delta           # discount rate
+  param['order'] = order           # Cheby polynomial order
+  param['upperK'] = param['k']     # upper K
+  param['lowerK'] = lowerK         # lower K
+  param['nodes'] = nodes           # number of Cheby poly nodes
+  return param
+
+
+
+
+
+# ----------------------------------------------------
 ## parameters from Fenichel & Abbott (2014)
 r = 0.3847                              # intrinsick growth rate
 param = pd.DataFrame({'r': [r]})
 
 # Big-eye Tuna population estimates: 569,888 mt
 # Minimum price: $8600/mt - $11000/mt
-param['k'] = 569888         # carry capacity (mt)
-param['q'] = 0.0008         # catchability coefficient q = Catch/(Hooks * Biomass)
-param['price'] = 5511.55       # price (Big-eye Tuna $2000 per metric ton)
-param['cost'] = 1640.40      # cost
+param['k'] = 1613855                # carry capacity (mt)
+param['q'] = 0.0008                 # catchability coefficient q = Catch/(Hooks * Biomass)
+param['price'] = 4.20*2204.62       # price 
+param['cost'] = 1.91*2204.62        # cost
 
 param['alpha'] = 0.5436459179063678         # tech parameter
 param['gamma'] = 0.7882                     # pre-ITQ management parameter
@@ -37,9 +62,15 @@ param['order'] = 50                         # Cheby polynomial order
 param['upperK'] = param['k']                # upper K
 param['lowerK'] = 5*10**6                    # lower K
 param['nodes'] = 500                        # number of Cheby poly nodes
+# ----------------------------------------------------
 
 
 
+
+
+
+
+#%%
 ## functions from Fenichel & Abbott (2014)
 
 # Effort function x(s) = ys^gamma
@@ -52,6 +83,15 @@ def catch(s, Z):
 
 # Profit function w(s, x) price * h(s, x) - cost * x(s)
 # w(s, x) price * q(y^alpha)(s^gamma * alpha) - cost * ys^gamma
+def bet_profit(s, Z):
+  return Z['price'][0] * catch(s, Z) - Z['cost'][0] * effort(s, Z)
+
+def yft_profit(s, Z):
+  return Z['price'][0] * catch(s, Z) - Z['cost'][0] * effort(s, Z)
+
+def swo_profit(s, Z):
+  return Z['price'][0] * catch(s, Z) - Z['cost'][0] * effort(s, Z)
+
 def profit(s, Z):
   return Z['price'][0] * catch(s, Z) - Z['cost'][0] * effort(s, Z)
 
