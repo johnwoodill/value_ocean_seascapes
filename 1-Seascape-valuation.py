@@ -16,31 +16,6 @@ from lib.capn import *
 
 plt.style.use('seaborn-whitegrid')
 
-
-#%%
-def gen_param(k, q, price, cost, alpha, gamma, y, delta, order, upperK, lowerK, nodes):
-  '''
-  Generate params for estimation
-  '''
-  param = pd.DataFrame({'r': [r]})
-  param['k'] = k                   # carry capacity (mt)
-  param['q'] = q                   # catchability coefficient q = Catch/(Hooks * Biomass)
-  param['price'] = price           # price 
-  param['cost'] = cost             # cost
-  param['alpha'] = alpha           # tech parameter
-  param['gamma'] = gamma           # pre-ITQ management parameter
-  param['y'] = y                   # system equivalence parameter
-  param['delta'] = delta           # discount rate
-  param['order'] = order           # Cheby polynomial order
-  param['upperK'] = param['k']     # upper K
-  param['lowerK'] = lowerK         # lower K
-  param['nodes'] = nodes           # number of Cheby poly nodes
-  return param
-
-
-
-
-
 # ----------------------------------------------------
 ## parameters from Fenichel & Abbott (2014)
 r = 0.3847                              # intrinsick growth rate
@@ -64,15 +39,30 @@ param['lowerK'] = 5*10**6                    # lower K
 param['nodes'] = 500                        # number of Cheby poly nodes
 # ----------------------------------------------------
 
-
-
-
-
-
-
 #%%
-## functions from Fenichel & Abbott (2014)
+def gen_param(k, q, price, cost, alpha, gamma, y, delta, order, upperK, lowerK, nodes):
+  '''
+  Generate params for estimation
+  '''
+  param = pd.DataFrame({'r': [r]})
+  param['k'] = k                   # carry capacity (mt)
+  param['q'] = q                   # catchability coefficient q = Catch/(Hooks * Biomass)
+  param['price'] = price           # price 
+  param['cost'] = cost             # cost
+  param['alpha'] = alpha           # tech parameter
+  param['gamma'] = gamma           # pre-ITQ management parameter
+  param['y'] = y                   # system equivalence parameter
+  param['delta'] = delta           # discount rate
+  param['order'] = order           # Cheby polynomial order
+  param['upperK'] = param['k']     # upper K
+  param['lowerK'] = lowerK         # lower K
+  param['nodes'] = nodes           # number of Cheby poly nodes
+  return param
 
+
+
+## functions from Fenichel & Abbott (2014)
+#%%
 # Effort function x(s) = ys^gamma
 def effort(s, Z):
   return Z['y'][0] * s ** Z['gamma'][0]
@@ -117,24 +107,109 @@ def dsdotdss(s, Z):
 
 
 
-## shadow prices
-# prepare capN
-Aspace = approxdef(param['order'],
-                   param['lowerK'],
-                   param['upperK'],
-                   param['delta']) #defines the approximation space
+#%%
+# Big-eye tuna 
+
+bet_dat = pd.DataFrame({
+  'species': 'bet',
+  'year': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018],
+  'q': 0.3847,
+  'k': [623121.00, 623121.00, 623121.00, 742967.00, 742967.00, 742967.00, 742967.00, 665441.00, 655441.00],
+  'price': [9127.13, 9193.27, 1846.73, 9171.22, 8311.42, 8862.57, 9259.40, 8179.14, 9479.87],
+  'cost': [2.41, 2.86, 3.01, 2.75, 2.62, 2.01, 1.91, 1.76, 2.11]
+  })
+
+# INCOMPLETE ----------------------------------
+# bet_dat = pd.DataFrame({
+#   'species': 'yft',
+#   'year': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018],
+#   'q': 0.3847,
+#   'k': [1881625.00, 1881625.00, 1881625.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00],
+#   'price': [7231.15, 5709.97, 8443.69, 9105.08, 8201.19, 6283.17, 6239.07, 5952.47, 8664.16],
+#   'cost': [2.41, 2.86, 3.01, 2.75, 2.62, 2.01, 1.91, 1.76, 2.11]
+#   })
+
+# swo_dat = pd.DataFrame({
+#   'species': 'swo',
+#   'year': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018],
+#   'q': 0.3847,
+#   'k': [1881625.00, 1881625.00, 1881625.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00],
+#   'price': [7231.15, 5709.97, 8443.69, 9105.08, 8201.19, 6283.17, 6239.07, 5952.47, 8664.16],
+#   'cost': [2.41, 2.86, 3.01, 2.75, 2.62, 2.01, 1.91, 1.76, 2.11]
+#   })
+# INCOMPLETE ----------------------------------
 
 
-nodes = chebnodegen(param['nodes'],
+# Convert cost to mt
+bet_dat = bet_dat.assign(cost = bet_dat['cost']*2204.62)
+
+
+
+def proc_vapprox(dat):
+
+retdat = pd.DataFrame()
+for year_ in range(2010, 2019):
+  dat = bet_dat[bet_dat['year'] == year_]
+  param = dat.reset_index(drop=True).copy()
+  param['r'] = 0.3847
+  param['alpha'] = 0.5436459179063678         # tech parameter
+  param['gamma'] = 0.7882                     # pre-ITQ management parameter
+  param['y'] = 0.15745573410462155            # system equivalence parameter
+  param['delta'] = 0.03                       # discount rate
+  param['order'] = 50                         # Cheby polynomial order
+  param['upperK'] = param['k']                # upper K
+  param['lowerK'] = param['k']*0.05                  # lower K
+  param['nodes'] = 500                        # number of Cheby poly nodes
+
+  # prepare capN
+  Aspace = approxdef(param['order'],
                      param['lowerK'],
-                     param['upperK']) #define the nodes
+                     param['upperK'],
+                     param['delta']) #defines the approximation space
+
+  nodes = chebnodegen(param['nodes'],
+                       param['lowerK'],
+                       param['upperK']) #define the nodes
+
+  # prepare for simulation
+  simuDataV = pd.DataFrame({
+    'nodes': nodes,
+    'sdot': sdot(nodes, param), 
+    'profit': profit(nodes, param)})
+
+  # Calculate V-approximationg coefficients
+  vC = vapprox(Aspace, simuDataV)  #the approximated coefficent vector for prices
+
+  GOMSimV = vsim(vC,
+    simuDataV.iloc[:, 0],
+    profit(nodes, param))
+
+  outdat = pd.DataFrame({
+    'year': dat['year'].iat[0],
+    'nodes': nodes,
+    'shadowp': GOMSimV['shadowp'].ravel()})
+
+  retdat = pd.concat([retdat, outdat])
+  print(f"Complete: {dat['year'].iat[0]}")
 
 
-# prepare for simulation
-simuDataV = pd.DataFrame({
-  'nodes': nodes, 
-  'sdot': sdot(nodes, param), 
-  'profit': profit(nodes, param)})
+retdat.to_csv('data/model_results.csv', index=False)
+
+results = [proc_vapprox(dat = bet_dat.iloc[[i], :]) for i in range(len(bet_dat))]
+
+outdat.to_csv("~/Downloads/test.csv", index=False)
+
+
+
+
+pd.DataFrame(GOMSimV)
+
+
+
+
+
+
+
 
 
 simuDataP = pd.DataFrame({
