@@ -113,11 +113,25 @@ def dsdotdss(s, Z):
 bet_dat = pd.DataFrame({
   'species': 'bet',
   'year': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018],
-  'q': 0.3847,
-  'k': [623121.00, 623121.00, 623121.00, 742967.00, 742967.00, 742967.00, 742967.00, 665441.00, 655441.00],
-  'price': [9127.13, 9193.27, 1846.73, 9171.22, 8311.42, 8862.57, 9259.40, 8179.14, 9479.87],
+  'q': 0.1834659424,
+  'k': [1432000.00, 1432000.00, 1432000.00, 2228600.00, 1613855.00, 1613855.00, 1763000.00, 1858775.00, 1858775.00],
+  'price': [9127.13, 9193.27, 10846.73, 9171.22, 8311.42, 8862.57, 9259.40, 8179.14, 9479.87],
+  'cost': [2.41, 2.86, 3.01, 2.75, 2.62, 2.01, 1.91, 1.76, 2.11],
+  'msy': [76760, 76760, 76760, 108520, 108520, 108520, 108040, 159020, 159020]
+  })
+
+
+bet_dat = pd.DataFrame({
+  'species': 'bet',
+  'year': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018],
+  'q': 0.0834659424,
+  'msy': [3399.611, 3156.786, 4090.436, 4404.347, 3879.906, 4159.24, 4303.251, 4466.556],
+  'price': [9127.13, 9193.27, 10846.73, 9171.22, 8311.42, 8862.57, 9259.40, 8179.14, 9479.87],
   'cost': [2.41, 2.86, 3.01, 2.75, 2.62, 2.01, 1.91, 1.76, 2.11]
   })
+
+
+
 
 # INCOMPLETE ----------------------------------
 # bet_dat = pd.DataFrame({
@@ -140,27 +154,45 @@ bet_dat = pd.DataFrame({
 # INCOMPLETE ----------------------------------
 
 
+
+#%%
+bet_dat = pd.DataFrame({
+  'species': 'bet',
+  'year': [2012, 2013, 2014, 2015, 2016, 2017, 2018],
+  'q': 0.1834659424,
+  'msy': [3399.611, 3156.786, 4090.436, 4404.347, 3879.906, 4159.24, 4303.251],
+  'price': [10846.73, 9171.22, 8311.42, 8862.57, 9259.40, 8179.14, 9479.87],
+  'cost': [3.58, 3.19, 2.97, 2.31, 2.36, 2.45, 2.99]
+  })
+
+
+# Get K
+# bet_dat = bet_dat.assign(k = bet_dat['msy']*2)
+
 # Convert cost to mt
 bet_dat = bet_dat.assign(cost = bet_dat['cost']*2204.62)
 
-
-
-def proc_vapprox(dat):
-
+# def proc_vapprox(dat):
 retdat = pd.DataFrame()
-for year_ in range(2010, 2019):
+for year_ in range(2018, 2019):
+  # for k_ in np.arange(1.75, 2.30, 0.05):
+  
+  # year_ = 2018
   dat = bet_dat[bet_dat['year'] == year_]
+  # dat = dat.assign(k = bet_dat['msy']*k_)
+  dat = dat.assign(k = bet_dat['msy']*10)
   param = dat.reset_index(drop=True).copy()
-  param['r'] = 0.3847
+  param['r'] = 0.201
   param['alpha'] = 0.5436459179063678         # tech parameter
   param['gamma'] = 0.7882                     # pre-ITQ management parameter
   param['y'] = 0.15745573410462155            # system equivalence parameter
   param['delta'] = 0.03                       # discount rate
   param['order'] = 50                         # Cheby polynomial order
   param['upperK'] = param['k']                # upper K
-  param['lowerK'] = param['k']*0.05                  # lower K
+  param['lowerK'] = param['k']*0.05           # lower K
   param['nodes'] = 500                        # number of Cheby poly nodes
-
+  param['msy'] = dat['msy'].iat[0]
+  
   # prepare capN
   Aspace = approxdef(param['order'],
                      param['lowerK'],
@@ -186,8 +218,11 @@ for year_ in range(2010, 2019):
 
   outdat = pd.DataFrame({
     'year': dat['year'].iat[0],
+    # 'k': k_,
     'nodes': nodes,
-    'shadowp': GOMSimV['shadowp'].ravel()})
+    'shadowp': GOMSimV['shadowp'].ravel(),
+    'upperK': param['upperK'].iat[0],
+    'msy': param['msy'].iat[0]})
 
   retdat = pd.concat([retdat, outdat])
   print(f"Complete: {dat['year'].iat[0]}")
@@ -195,113 +230,175 @@ for year_ in range(2010, 2019):
 
 retdat.to_csv('data/model_results.csv', index=False)
 
-results = [proc_vapprox(dat = bet_dat.iloc[[i], :]) for i in range(len(bet_dat))]
 
-outdat.to_csv("~/Downloads/test.csv", index=False)
-
-
-
-
-pd.DataFrame(GOMSimV)
-
-
-
-
-
-
-
-
-
-simuDataP = pd.DataFrame({
-  'nodes': nodes, 
-  'sdot': sdot(nodes, param), 
-  'dsdotds': dsdotds(nodes, param),
-  'dwds': dwds(nodes, param)})
-
-
-simuDataPdot = pd.DataFrame({
-  'nodes': nodes, 
-  'sdot': sdot(nodes, param), 
-  'dsdotds': dsdotds(nodes, param),
-  'dsdotdss': dsdotdss(nodes, param),
-  'dwds': dwds(nodes, param),
-  'dwdss': dwdss(nodes, param)})
-
-
-# Calculate V-approximationg coefficients
-vC = vapprox(Aspace, simuDataV)  #the approximated coefficent vector for prices
-
-pC = papprox(Aspace,
-             simuDataP.iloc[:, 0],
-             simuDataP.iloc[:, 1],
-             simuDataP.iloc[:, 2],
-             simuDataP.iloc[:, 3])  #the approximated coefficent vector for prices
-
-
-pdotC = pdotapprox(Aspace,
-             simuDataPdot.iloc[:, 0],
-             simuDataPdot.iloc[:, 1],
-             simuDataPdot.iloc[:, 2],
-             simuDataPdot.iloc[:, 3],
-             simuDataPdot.iloc[:, 4],
-             simuDataPdot.iloc[:, 5])  #the approximated coefficent vector for prices
-
-
-GOMSimV = vsim(vC,
-  simuDataV.iloc[:, 0],
-  profit(nodes, param))
-
-
-
-GOMSimP = psim(pC,
-                simuDataP.iloc[:, 0],
-                profit(nodes, param),
-                simuDataP.iloc[:, 1])
-
-
-GOMSimPdot = pdotsim(pdotC,
-                      simuDataPdot.iloc[:, 0],
-                      simuDataPdot.iloc[:, 1],
-                      simuDataPdot.iloc[:, 2],
-                      profit(nodes,param),
-                      simuDataPdot.iloc[:, 4])
-
-
-# Plot shadow prices
-#%%
-fig, axs = plt.subplots(3)
-fig.subplots_adjust(hspace=.5)
-axs[0].plot(nodes, GOMSimV['shadowp'], color='blue');
-axs[1].plot(nodes, GOMSimP['shadowp'], color='red');
-axs[2].plot(nodes, GOMSimPdot['shadowp'], color='green');
-axs[0].title.set_text('Value Approximation')
-axs[1].title.set_text('Price Approximation')
-axs[2].title.set_text('P-dot Approximation')
-fig.supxlabel('Stock Size')
-fig.supylabel('Shadow Price ($)')
-plt.show()
-
-#%%
-fig = plt.figure()
-ax = plt.axes()
-# ax.ticklabel_format(useOffset=False)
-ax.set_ylim([0, 8000])
-ax.plot(nodes/1000, GOMSimV['shadowp'], color='blue');
-fig.supxlabel('Stock Size (1k mt)')
-fig.supylabel('Shadow Price ($)')
-plt.ticklabel_format(style='plain')
-plt.show()
 
 
 #%%
-fig = plt.figure()
-ax = plt.axes()
-# ax.ticklabel_format(useOffset=False)
-ax.set_ylim([0, 2000])
-ax.plot(nodes/1000, GOMSimV['shadowp'], color='blue');
-fig.supxlabel('Stock Size (1k mt)')
-fig.supylabel('Shadow Price ($)')
-plt.ticklabel_format(style='plain')
-plt.show()
+# Get changes in management with decreases in biomass
+current_stock = 9479.87
+stock_dat = pd.DataFrame()
+for i in np.arange(0.50, 1.01, 0.01):
+  indat = pd.DataFrame({'prop': [i], 'stock': [current_stock*i]})
+  stock_dat = pd.concat([stock_dat, indat]).reset_index(drop=True)
+  
+
+# def proc_vapprox(dat):
+stock_retdat = pd.DataFrame()
+for i in range(len(stock_dat)):
+  dat = bet_dat[bet_dat['year'] == 2018]
+  dat = dat.assign(k = bet_dat['msy']*2)
+  param = dat.reset_index(drop=True).copy()
+  param['r'] = 0.201
+  param['alpha'] = 0.5436459179063678         # tech parameter
+  param['gamma'] = 0.7882                     # pre-ITQ management parameter
+  param['y'] = 0.15745573410462155            # system equivalence parameter
+  param['delta'] = 0.03                       # discount rate
+  param['order'] = 50                         # Cheby polynomial order
+  param['upperK'] = stock_dat.loc[i, 'stock']               # upper K
+  param['lowerK'] = stock_dat.loc[i, 'stock']*0.05                  # lower K
+  param['nodes'] = 500                        # number of Cheby poly nodes
+  param['msy'] = stock_dat.loc[i, 'stock']/2
+  param['perc'] = stock_dat.loc[i, 'prop']
+  
+  # prepare capN
+  Aspace = approxdef(param['order'],
+                     param['lowerK'],
+                     param['upperK'],
+                     param['delta']) #defines the approximation space
+
+  nodes = chebnodegen(param['nodes'],
+                       param['lowerK'],
+                       param['upperK']) #define the nodes
+
+  # prepare for simulation
+  simuDataV = pd.DataFrame({
+    'nodes': nodes,
+    'sdot': sdot(nodes, param), 
+    'profit': profit(nodes, param)})
+
+  # Calculate V-approximationg coefficients
+  vC = vapprox(Aspace, simuDataV)  #the approximated coefficent vector for prices
+
+  GOMSimV = vsim(vC,
+    simuDataV.iloc[:, 0],
+    profit(nodes, param))
+
+  indat = pd.DataFrame({
+    'year': dat['year'].iat[0],
+    'nodes': nodes,
+    'shadowp': GOMSimV['shadowp'].ravel(),
+    'upperK': param['upperK'].iat[0],
+    'msy': param['msy'].iat[0],
+    'perc': param['perc'].iat[0],
+    'r': param['r'].iat[0]})
+
+  stock_retdat = pd.concat([stock_retdat, indat])
+  print(i)
+
+
+stock_retdat.to_csv('data/climate_change_model_results.csv', index=False)
+
+
+
+
+
+
+
+
+
+
+
+
+# simuDataP = pd.DataFrame({
+#   'nodes': nodes, 
+#   'sdot': sdot(nodes, param), 
+#   'dsdotds': dsdotds(nodes, param),
+#   'dwds': dwds(nodes, param)})
+
+
+# simuDataPdot = pd.DataFrame({
+#   'nodes': nodes, 
+#   'sdot': sdot(nodes, param), 
+#   'dsdotds': dsdotds(nodes, param),
+#   'dsdotdss': dsdotdss(nodes, param),
+#   'dwds': dwds(nodes, param),
+#   'dwdss': dwdss(nodes, param)})
+
+
+# # Calculate V-approximationg coefficients
+# vC = vapprox(Aspace, simuDataV)  #the approximated coefficent vector for prices
+
+# pC = papprox(Aspace,
+#              simuDataP.iloc[:, 0],
+#              simuDataP.iloc[:, 1],
+#              simuDataP.iloc[:, 2],
+#              simuDataP.iloc[:, 3])  #the approximated coefficent vector for prices
+
+
+# pdotC = pdotapprox(Aspace,
+#              simuDataPdot.iloc[:, 0],
+#              simuDataPdot.iloc[:, 1],
+#              simuDataPdot.iloc[:, 2],
+#              simuDataPdot.iloc[:, 3],
+#              simuDataPdot.iloc[:, 4],
+#              simuDataPdot.iloc[:, 5])  #the approximated coefficent vector for prices
+
+
+# GOMSimV = vsim(vC,
+#   simuDataV.iloc[:, 0],
+#   profit(nodes, param))
+
+
+
+# GOMSimP = psim(pC,
+#                 simuDataP.iloc[:, 0],
+#                 profit(nodes, param),
+#                 simuDataP.iloc[:, 1])
+
+
+# GOMSimPdot = pdotsim(pdotC,
+#                       simuDataPdot.iloc[:, 0],
+#                       simuDataPdot.iloc[:, 1],
+#                       simuDataPdot.iloc[:, 2],
+#                       profit(nodes,param),
+#                       simuDataPdot.iloc[:, 4])
+
+
+# # Plot shadow prices
+# #%%
+# fig, axs = plt.subplots(3)
+# fig.subplots_adjust(hspace=.5)
+# axs[0].plot(nodes, GOMSimV['shadowp'], color='blue');
+# axs[1].plot(nodes, GOMSimP['shadowp'], color='red');
+# axs[2].plot(nodes, GOMSimPdot['shadowp'], color='green');
+# axs[0].title.set_text('Value Approximation')
+# axs[1].title.set_text('Price Approximation')
+# axs[2].title.set_text('P-dot Approximation')
+# fig.supxlabel('Stock Size')
+# fig.supylabel('Shadow Price ($)')
+# plt.show()
+
+# #%%
+# fig = plt.figure()
+# ax = plt.axes()
+# # ax.ticklabel_format(useOffset=False)
+# ax.set_ylim([0, 8000])
+# ax.plot(nodes/1000, GOMSimV['shadowp'], color='blue');
+# fig.supxlabel('Stock Size (1k mt)')
+# fig.supylabel('Shadow Price ($)')
+# plt.ticklabel_format(style='plain')
+# plt.show()
+
+
+# #%%
+# fig = plt.figure()
+# ax = plt.axes()
+# # ax.ticklabel_format(useOffset=False)
+# ax.set_ylim([0, 2000])
+# ax.plot(nodes/1000, GOMSimV['shadowp'], color='blue');
+# fig.supxlabel('Stock Size (1k mt)')
+# fig.supylabel('Shadow Price ($)')
+# plt.ticklabel_format(style='plain')
+# plt.show()
 
 
