@@ -444,3 +444,72 @@ ggplot() +
   NULL
 
 
+
+
+# -----------------------------------------------------------------------------
+# Map of Seascape class density
+dat = as.data.frame(read_csv("~/Projects/value_ocean_seascapes/data/2018_seascape_proportions"))
+
+eezs <- read_sf("~/Projects/World-fishing-rich-diver-equit/data/World_EEZ_v11_20191118_HR_0_360/", layer = "eez_v11_0_360") %>% 
+  filter(POL_TYPE == '200NM') # select the 200 nautical mile polygon layer
+
+mpas <- read_sf('~/Projects/World-fishing-rich-diver-equit/data/mpa_shapefiles/vlmpa.shp')
+mpas <- st_shift_longitude(mpas)
+
+dat$dist_prop = (dat$prop*9558.14*159020)/1000
+
+1519935423
+
+ggplot(dat, aes(lon, lat, fill=dist_prop)) + 
+  geom_tile(alpha=0.95) + 
+  # geom_sf(data=eezs, color="grey", fill=NA, inherit.aes = FALSE) +
+  geom_sf(data = world_shp, fill = 'black', color = 'black',  size = 0.1, inherit.aes = FALSE)  +
+  scale_fill_viridis_c(limits = c(0, 600), breaks = seq(0, 600, 100), labels=paste0("$", seq(0, 600, 100), "k")) +
+  annotate("segment", x = 140, xend = 210, y = 50, yend = 50, colour = "black") +
+  annotate("segment", x = 210, xend = 210, y = 50, yend = -10, colour = "black") +
+  annotate("segment", x = 210, xend = 230, y = -10, yend = -10, colour = "black") +
+  annotate("segment", x = 230, xend = 230, y = -10, yend = -60, colour = "black") +
+  annotate("segment", x = 140, xend = 230, y = -60, yend = -60, colour = "black") +
+  annotate("segment", x = 140, xend = 140, y = -60, yend = -35, colour = "black") +
+  annotate("segment", x = 130, xend = 130, y = -20, yend = -8, colour = "black") +
+  annotate("segment", x = 130, xend = 100, y = -8, yend = -8, colour = "black") +
+  annotate("segment", x = 100, xend = 100, y = -8, yend = 50, colour = "black") +
+  coord_sf(xlim=c(100, 230), ylim=c(-60, 55), expand = FALSE) +
+  theme_minimal() +
+  labs(x=NULL, y=NULL, fill=NULL, title="2018 Stock Capitalization Value of US Longline Bigeye Tuna \n ($1.52 trillon)") + 
+  theme(legend.title = element_text("asdf"),
+        legend.position = "right",
+        plot.title = element_text(hjust = 0.5),
+                panel.spacing = unit(0.5, "lines"),
+        panel.border = element_rect(colour = "black", fill=NA, size=.5)) +
+  guides(fill = guide_colorbar(title.position = "top", 
+                             direction = "vertical",
+                             frame.colour = "black",
+                             barwidth = .75,
+                             barheight = 20)) +
+  NULL
+
+ggsave("~/Projects/value_ocean_seascapes/figures/map_total_value_us_big.png", width=6, height=5)
+
+
+
+# Map of Hawaii with fishing effort
+ggplot(filter(pndat, year == 2018)) + 
+  scale_fill_viridis_c() +
+  new_scale_fill() +
+  labs(x=NULL, y=NULL, fill="log(Catch)") +
+  geom_tile(aes(lon, lat, fill=log(bet_c_total)), inherit.aes = FALSE) +
+  # geom_text(aes(lon, lat, label=round(log(bet_c_total), 1)), inherit.aes = FALSE) +
+  scale_fill_gradient2(low = "orange", high = "red", limits = c(0, 7), breaks = seq(0, 7, 1)) +
+  theme_nothing(14) + 
+  geom_sf(data = world_shp, fill = 'black', color = 'black',  size = 0.1, inherit.aes = FALSE)  +
+  theme(panel.border = element_rect(colour = "white", fill=NA, size=1),
+        legend.position ="none",
+        legend.direction = "vertical",
+        legend.title = element_blank()) +
+  # guides(fill=guide_colourbar(title.hjust = 0.5, barwidth = 0.5, barheight = 12, frame.colour = "black")) +
+  coord_sf(ylim=c(10, 30), xlim=c(185, 210)) +
+  NULL
+
+ggsave("~/Downloads/hawaii1.png", height=6, width=6)
+
