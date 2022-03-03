@@ -107,6 +107,8 @@ def dsdotdss(s, Z):
 
 
 
+# 'k': [1432000.00, 1432000.00, 1432000.00, 2228600.00, 1613855.00, 1613855.00, 1763000.00, 1858775.00, 1858775.00],
+
 #%%
 # Big-eye tuna 
 
@@ -114,7 +116,7 @@ bet_dat = pd.DataFrame({
   'species': 'bet',
   'year': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018],
   'q': 0.1834659424,
-  'k': [1432000.00, 1432000.00, 1432000.00, 2228600.00, 1613855.00, 1613855.00, 1763000.00, 1858775.00, 1858775.00],
+  'k': [623121, 623121, 623121, 742967, 742967, 742967, 742967, 665441, 655441], 
   'price': [9127.13, 9193.27, 10846.73, 9171.22, 8311.42, 8862.57, 9259.40, 8179.14, 9479.87],
   'cost': [2.41, 2.86, 3.01, 2.75, 2.62, 2.01, 1.91, 1.76, 2.11],
   'msy': [76760, 76760, 76760, 108520, 108520, 108520, 108040, 159020, 159020]
@@ -125,39 +127,6 @@ bet_dat = pd.DataFrame({
 
 
 
-# INCOMPLETE ----------------------------------
-# bet_dat = pd.DataFrame({
-#   'species': 'yft',
-#   'year': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018],
-#   'q': 0.3847,
-#   'k': [1881625.00, 1881625.00, 1881625.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00],
-#   'price': [7231.15, 5709.97, 8443.69, 9105.08, 8201.19, 6283.17, 6239.07, 5952.47, 8664.16],
-#   'cost': [2.41, 2.86, 3.01, 2.75, 2.62, 2.01, 1.91, 1.76, 2.11]
-#   })
-
-# swo_dat = pd.DataFrame({
-#   'species': 'swo',
-#   'year': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018],
-#   'q': 0.3847,
-#   'k': [1881625.00, 1881625.00, 1881625.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00, 1994655.00],
-#   'price': [7231.15, 5709.97, 8443.69, 9105.08, 8201.19, 6283.17, 6239.07, 5952.47, 8664.16],
-#   'cost': [2.41, 2.86, 3.01, 2.75, 2.62, 2.01, 1.91, 1.76, 2.11]
-#   })
-# INCOMPLETE ----------------------------------
-
-
-
-#%%
-# bet_dat = pd.DataFrame({
-#   'species': 'bet',
-#   'year': [2012, 2013, 2014, 2015, 2016, 2017, 2018],
-#   'q': 0.1834659424,
-#   'msy': [3399.611, 3156.786, 4090.436, 4404.347, 3879.906, 4159.24, 4303.251],
-#   'price': [10846.73, 9171.22, 8311.42, 8862.57, 9259.40, 8179.14, 9479.87],
-#   'cost': [3.58, 3.19, 2.97, 2.31, 2.36, 2.45, 2.99]
-#   })
-
-
 # Get K
 # bet_dat = bet_dat.assign(k = bet_dat['msy']*2)
 
@@ -166,13 +135,10 @@ bet_dat = bet_dat.assign(cost = bet_dat['cost']*2204.62)
 
 # def proc_vapprox(dat):
 retdat = pd.DataFrame()
-for year_ in range(2012, 2019):
-  # for k_ in np.arange(1.75, 2.30, 0.05):
-  
-  # year_ = 2018
+for year_ in range(2018, 2019):
   dat = bet_dat[bet_dat['year'] == year_]
   # dat = dat.assign(k = bet_dat['msy']*k_)
-  dat = dat.assign(k = bet_dat['msy']*10)
+  dat = dat.assign(k = dat['k']*5)
   param = dat.reset_index(drop=True).copy()
   param['r'] = 0.201
   param['alpha'] = 0.5436459179063678         # tech parameter
@@ -218,6 +184,10 @@ for year_ in range(2012, 2019):
 
   retdat = pd.concat([retdat, outdat])
   print(f"Complete: {dat['year'].iat[0]}")
+
+
+retdat.to_csv('data/test.csv', index=False)
+
 
 
 retdat.to_csv('data/model_results.csv', index=False)
@@ -292,105 +262,5 @@ stock_retdat.to_csv('data/climate_change_model_results.csv', index=False)
 
 
 
-
-
-
-
-
-
-
-
-
-# simuDataP = pd.DataFrame({
-#   'nodes': nodes, 
-#   'sdot': sdot(nodes, param), 
-#   'dsdotds': dsdotds(nodes, param),
-#   'dwds': dwds(nodes, param)})
-
-
-# simuDataPdot = pd.DataFrame({
-#   'nodes': nodes, 
-#   'sdot': sdot(nodes, param), 
-#   'dsdotds': dsdotds(nodes, param),
-#   'dsdotdss': dsdotdss(nodes, param),
-#   'dwds': dwds(nodes, param),
-#   'dwdss': dwdss(nodes, param)})
-
-
-# # Calculate V-approximationg coefficients
-# vC = vapprox(Aspace, simuDataV)  #the approximated coefficent vector for prices
-
-# pC = papprox(Aspace,
-#              simuDataP.iloc[:, 0],
-#              simuDataP.iloc[:, 1],
-#              simuDataP.iloc[:, 2],
-#              simuDataP.iloc[:, 3])  #the approximated coefficent vector for prices
-
-
-# pdotC = pdotapprox(Aspace,
-#              simuDataPdot.iloc[:, 0],
-#              simuDataPdot.iloc[:, 1],
-#              simuDataPdot.iloc[:, 2],
-#              simuDataPdot.iloc[:, 3],
-#              simuDataPdot.iloc[:, 4],
-#              simuDataPdot.iloc[:, 5])  #the approximated coefficent vector for prices
-
-
-# GOMSimV = vsim(vC,
-#   simuDataV.iloc[:, 0],
-#   profit(nodes, param))
-
-
-
-# GOMSimP = psim(pC,
-#                 simuDataP.iloc[:, 0],
-#                 profit(nodes, param),
-#                 simuDataP.iloc[:, 1])
-
-
-# GOMSimPdot = pdotsim(pdotC,
-#                       simuDataPdot.iloc[:, 0],
-#                       simuDataPdot.iloc[:, 1],
-#                       simuDataPdot.iloc[:, 2],
-#                       profit(nodes,param),
-#                       simuDataPdot.iloc[:, 4])
-
-
-# # Plot shadow prices
-# #%%
-# fig, axs = plt.subplots(3)
-# fig.subplots_adjust(hspace=.5)
-# axs[0].plot(nodes, GOMSimV['shadowp'], color='blue');
-# axs[1].plot(nodes, GOMSimP['shadowp'], color='red');
-# axs[2].plot(nodes, GOMSimPdot['shadowp'], color='green');
-# axs[0].title.set_text('Value Approximation')
-# axs[1].title.set_text('Price Approximation')
-# axs[2].title.set_text('P-dot Approximation')
-# fig.supxlabel('Stock Size')
-# fig.supylabel('Shadow Price ($)')
-# plt.show()
-
-# #%%
-# fig = plt.figure()
-# ax = plt.axes()
-# # ax.ticklabel_format(useOffset=False)
-# ax.set_ylim([0, 8000])
-# ax.plot(nodes/1000, GOMSimV['shadowp'], color='blue');
-# fig.supxlabel('Stock Size (1k mt)')
-# fig.supylabel('Shadow Price ($)')
-# plt.ticklabel_format(style='plain')
-# plt.show()
-
-
-# #%%
-# fig = plt.figure()
-# ax = plt.axes()
-# # ax.ticklabel_format(useOffset=False)
-# ax.set_ylim([0, 2000])
-# ax.plot(nodes/1000, GOMSimV['shadowp'], color='blue');
-# fig.supxlabel('Stock Size (1k mt)')
-# fig.supylabel('Shadow Price ($)')
-# plt.ticklabel_format(style='plain')
-# plt.show()
 
 

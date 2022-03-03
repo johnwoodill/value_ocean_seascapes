@@ -67,15 +67,18 @@ setwd("~/Projects/value_ocean_seascapes/")
 
 # ----------------------------------------------------
 # Price Curve for 2018
+dat = read_csv("data/test.csv")
 dat = read_csv("data/model_results.csv")
+
 
 ddat = filter(dat, year == 2018)
 
 est_price = approxfun(x = ddat$nodes, y = ddat$shadowp)
 est_stock = approxfun(x = ddat$shadowp, y = ddat$nodes)
 
-price = est_price(159020.00)
-stock = 159020.00
+price = est_price(1858775.00)
+stock = 1858775.00
+price*stock/1000000000
 price
 
 ggplot(ddat, aes(nodes, shadowp)) + 
