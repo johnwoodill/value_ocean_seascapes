@@ -18,46 +18,46 @@ plt.style.use('seaborn-whitegrid')
 
 # ----------------------------------------------------
 ## parameters from Fenichel & Abbott (2014)
-r = 0.3847                              # intrinsick growth rate
-param = pd.DataFrame({'r': [r]})
+# r = 0.3847                              # intrinsick growth rate
+# param = pd.DataFrame({'r': [r]})
 
-# Big-eye Tuna population estimates: 569,888 mt
-# Minimum price: $8600/mt - $11000/mt
-param['k'] = 1613855                # carry capacity (mt)
-param['q'] = 0.0008                 # catchability coefficient q = Catch/(Hooks * Biomass)
-param['price'] = 4.20*2204.62       # price 
-param['cost'] = 1.91*2204.62        # cost
+# # Big-eye Tuna population estimates: 569,888 mt
+# # Minimum price: $8600/mt - $11000/mt
+# param['k'] = 1613855                # carry capacity (mt)
+# param['q'] = 0.0008                 # catchability coefficient q = Catch/(Hooks * Biomass)
+# param['price'] = 4.20*2204.62       # price 
+# param['cost'] = 1.91*2204.62        # cost
 
-param['alpha'] = 0.5436459179063678         # tech parameter
-param['gamma'] = 0.7882                     # pre-ITQ management parameter
-param['y'] = 0.15745573410462155            # system equivalence parameter
-param['delta'] = 0.03                       # discount rate
+# param['alpha'] = 0.5436459179063678         # tech parameter
+# param['gamma'] = 0.7882                     # pre-ITQ management parameter
+# param['y'] = 0.15745573410462155            # system equivalence parameter
+# param['delta'] = 0.03                       # discount rate
 
-param['order'] = 50                         # Cheby polynomial order
-param['upperK'] = param['k']                # upper K
-param['lowerK'] = 5*10**6                    # lower K
-param['nodes'] = 500                        # number of Cheby poly nodes
-# ----------------------------------------------------
+# param['order'] = 50                         # Cheby polynomial order
+# param['upperK'] = param['k']                # upper K
+# param['lowerK'] = 5*10**6                    # lower K
+# param['nodes'] = 500                        # number of Cheby poly nodes
+# # ----------------------------------------------------
 
 #%%
-def gen_param(k, q, price, cost, alpha, gamma, y, delta, order, upperK, lowerK, nodes):
-  '''
-  Generate params for estimation
-  '''
-  param = pd.DataFrame({'r': [r]})
-  param['k'] = k                   # carry capacity (mt)
-  param['q'] = q                   # catchability coefficient q = Catch/(Hooks * Biomass)
-  param['price'] = price           # price 
-  param['cost'] = cost             # cost
-  param['alpha'] = alpha           # tech parameter
-  param['gamma'] = gamma           # pre-ITQ management parameter
-  param['y'] = y                   # system equivalence parameter
-  param['delta'] = delta           # discount rate
-  param['order'] = order           # Cheby polynomial order
-  param['upperK'] = param['k']     # upper K
-  param['lowerK'] = lowerK         # lower K
-  param['nodes'] = nodes           # number of Cheby poly nodes
-  return param
+# def gen_param(k, q, price, cost, alpha, gamma, y, delta, order, upperK, lowerK, nodes):
+#   '''
+#   Generate params for estimation
+#   '''
+#   param = pd.DataFrame({'r': [r]})
+#   param['k'] = k                   # carry capacity (mt)
+#   param['q'] = q                   # catchability coefficient q = Catch/(Hooks * Biomass)
+#   param['price'] = price           # price 
+#   param['cost'] = cost             # cost
+#   param['alpha'] = alpha           # tech parameter
+#   param['gamma'] = gamma           # pre-ITQ management parameter
+#   param['y'] = y                   # system equivalence parameter
+#   param['delta'] = delta           # discount rate
+#   param['order'] = order           # Cheby polynomial order
+#   param['upperK'] = param['k']     # upper K
+#   param['lowerK'] = lowerK         # lower K
+#   param['nodes'] = nodes           # number of Cheby poly nodes
+#   return param
 
 
 
@@ -67,21 +67,17 @@ def gen_param(k, q, price, cost, alpha, gamma, y, delta, order, upperK, lowerK, 
 def effort(s, Z):
   return Z['y'][0] * s ** Z['gamma'][0]
 
+# def effort(s, Z):
+#   return Z['y'][0] * s
+
 # Catch function (harvest) h(s, x) = q(y^alpha)(s^gamma * alpha)
 def catch(s, Z):
   return Z['q'][0] * effort(s, Z) ** Z['alpha'][0] * s
 
+# def catch(s, Z):
+#   return Z['q'][0] * effort(s, Z) * s
+
 # Profit function w(s, x) price * h(s, x) - cost * x(s)
-# w(s, x) price * q(y^alpha)(s^gamma * alpha) - cost * ys^gamma
-def bet_profit(s, Z):
-  return Z['price'][0] * catch(s, Z) - Z['cost'][0] * effort(s, Z)
-
-def yft_profit(s, Z):
-  return Z['price'][0] * catch(s, Z) - Z['cost'][0] * effort(s, Z)
-
-def swo_profit(s, Z):
-  return Z['price'][0] * catch(s, Z) - Z['cost'][0] * effort(s, Z)
-
 def profit(s, Z):
   return Z['price'][0] * catch(s, Z) - Z['cost'][0] * effort(s, Z)
 
@@ -89,29 +85,27 @@ def profit(s, Z):
 def sdot(s, Z):
   return Z['r'][0] * s * (1 - s / Z['k'][0]) - catch(s, Z)
 
-# Evaluated dw/ds (derivate of profit function)
-def dwds(s, Z):
-  return (Z['gamma'][0] * Z['alpha'][0] + 1) * Z['price'][0] * Z['q'][0] * (Z['y'][0] ** Z['alpha'][0]) * (s ** (Z['gamma'][0] * Z['alpha'][0])) - Z['gamma'][0] * Z['cost'][0] * Z['y'][0] * (s ** (Z['gamma'][0] - 1))  
+# # Evaluated dw/ds (derivate of profit function)
+# def dwds(s, Z):
+#   return (Z['gamma'][0] * Z['alpha'][0] + 1) * Z['price'][0] * Z['q'][0] * (Z['y'][0] ** Z['alpha'][0]) * (s ** (Z['gamma'][0] * Z['alpha'][0])) - Z['gamma'][0] * Z['cost'][0] * Z['y'][0] * (s ** (Z['gamma'][0] - 1))  
 
-# Evaluated (d/ds) * (dw/ds)
-def dwdss(s, Z):
-  return (Z['gamma'][0] * Z['alpha'][0] + 1) * Z['gamma'][0] * Z['alpha'][0] * Z['price'][0] * Z['q'][0] * (Z['y'][0] ** Z['alpha'][0]) * (s ** (Z['gamma'][0] * Z['alpha'][0] - 1)) - Z['gamma'][0] * (Z['gamma'][0] - 1) * Z['cost'][0] * Z['y'][0] * (s ** (Z['gamma'][0] - 2)) 
+# # Evaluated (d/ds) * (dw/ds)
+# def dwdss(s, Z):
+#   return (Z['gamma'][0] * Z['alpha'][0] + 1) * Z['gamma'][0] * Z['alpha'][0] * Z['price'][0] * Z['q'][0] * (Z['y'][0] ** Z['alpha'][0]) * (s ** (Z['gamma'][0] * Z['alpha'][0] - 1)) - Z['gamma'][0] * (Z['gamma'][0] - 1) * Z['cost'][0] * Z['y'][0] * (s ** (Z['gamma'][0] - 2)) 
 
-# Evaluated dsdot/ds
-def dsdotds(s, Z):
-  return Z['r'][0] - 2 * Z['r'][0] * s / Z['k'][0] - (Z['gamma'][0] * Z['alpha'][0] + 1) * Z['q'][0] * (Z['y'][0] ** Z['alpha'][0]) * (s ** (Z['gamma'][0] * Z['alpha'][0]))
+# # Evaluated dsdot/ds
+# def dsdotds(s, Z):
+#   return Z['r'][0] - 2 * Z['r'][0] * s / Z['k'][0] - (Z['gamma'][0] * Z['alpha'][0] + 1) * Z['q'][0] * (Z['y'][0] ** Z['alpha'][0]) * (s ** (Z['gamma'][0] * Z['alpha'][0]))
 
-# Evaluated (d/ds) * (dsdot/ds)
-def dsdotdss(s, Z):
-  return -2 * Z['r'][0] / Z['k'][0] - (Z['gamma'][0] * Z['alpha'][0] + 1) * Z['gamma'][0] * Z['alpha'][0] * Z['q'][0] * (Z['y'][0] ** Z['alpha'][0]) * (s ** ((Z['gamma'][0] * Z['alpha'][0] -1)))
+# # Evaluated (d/ds) * (dsdot/ds)
+# def dsdotdss(s, Z):
+#   return -2 * Z['r'][0] / Z['k'][0] - (Z['gamma'][0] * Z['alpha'][0] + 1) * Z['gamma'][0] * Z['alpha'][0] * Z['q'][0] * (Z['y'][0] ** Z['alpha'][0]) * (s ** ((Z['gamma'][0] * Z['alpha'][0] -1)))
 
 
-
-# 'k': [1432000.00, 1432000.00, 1432000.00, 2228600.00, 1613855.00, 1613855.00, 1763000.00, 1858775.00, 1858775.00],
 
 #%%
 # Big-eye tuna 
-
+# WCPFC
 bet_dat = pd.DataFrame({
   'species': 'bet',
   'year': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018],
@@ -123,31 +117,27 @@ bet_dat = pd.DataFrame({
   })
 
 
-
-
-
-
-# Get K
-# bet_dat = bet_dat.assign(k = bet_dat['msy']*2)
-
-# Convert cost to mt
+# Convert cost kg to mt
 bet_dat = bet_dat.assign(cost = bet_dat['cost']*2204.62)
 
 # def proc_vapprox(dat):
 retdat = pd.DataFrame()
-for year_ in range(2018, 2019):
+# for alpha_ in np.arange(0.25, 0.75, 0.05):
+for year_ in range(2010, 2019):
   dat = bet_dat[bet_dat['year'] == year_]
-  # dat = dat.assign(k = bet_dat['msy']*k_)
-  dat = dat.assign(k = dat['k']*5)
+  # dat = dat.assign(k = dat['k']*5)
   param = dat.reset_index(drop=True).copy()
   param['r'] = 0.201
-  param['alpha'] = 0.5436459179063678         # tech parameter
-  param['gamma'] = 0.7882                     # pre-ITQ management parameter
-  param['y'] = 0.15745573410462155            # system equivalence parameter
+  # param['alpha'] = 0.5436459179063678         # tech parameter
+  # param['alpha'] = 0.2         # tech parameter
+  param['alpha'] = 0.84         # tech parameter
+  param['gamma'] = 0.74                   # pre-ITQ management parameter
+  # param['y'] = 0.15745573410462155            # system equivalence parameter
+  param['y'] = 0.00514            # system equivalence parameter
   param['delta'] = 0.03                       # discount rate
   param['order'] = 50                         # Cheby polynomial order
-  param['upperK'] = param['k']                # upper K
-  param['lowerK'] = param['k']*0.02           # lower K
+  param['upperK'] = param['k']*1.01                # upper K
+  param['lowerK'] = param['k']*0.01           # lower K
   param['nodes'] = 500                        # number of Cheby poly nodes
   param['msy'] = dat['msy'].iat[0]
   
@@ -176,7 +166,7 @@ for year_ in range(2018, 2019):
 
   outdat = pd.DataFrame({
     'year': dat['year'].iat[0],
-    # 'k': k_,
+    'k': param['k'].iat[0],
     'nodes': nodes,
     'shadowp': GOMSimV['shadowp'].ravel(),
     'upperK': param['upperK'].iat[0],
@@ -186,42 +176,41 @@ for year_ in range(2018, 2019):
   print(f"Complete: {dat['year'].iat[0]}")
 
 
-retdat.to_csv('data/test.csv', index=False)
-
-
-
 retdat.to_csv('data/model_results.csv', index=False)
+
+
+
 
 
 
 
 #%%
 # Get changes in management with decreases in biomass
-current_stock = 9479.87
+current_stock = 655441
 stock_dat = pd.DataFrame()
-for i in np.arange(0.50, 1.01, 0.01):
+for i in [0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75]:
   indat = pd.DataFrame({'prop': [i], 'stock': [current_stock*i]})
   stock_dat = pd.concat([stock_dat, indat]).reset_index(drop=True)
   
 
 # def proc_vapprox(dat):
-stock_retdat = pd.DataFrame()
+lst_ = []
 for i in range(len(stock_dat)):
   dat = bet_dat[bet_dat['year'] == 2018]
-  dat = dat.assign(k = bet_dat['msy']*2)
+  # dat = dat.assign(k = dat['k']*5)
   param = dat.reset_index(drop=True).copy()
   param['r'] = 0.201
-  param['alpha'] = 0.5436459179063678         # tech parameter
-  param['gamma'] = 0.7882                     # pre-ITQ management parameter
-  param['y'] = 0.15745573410462155            # system equivalence parameter
+  param['alpha'] = 0.84         # tech parameter
+  param['gamma'] = 0.74                     # pre-ITQ management parameter
+  param['y'] = 0.00514            # system equivalence parameter
   param['delta'] = 0.03                       # discount rate
   param['order'] = 50                         # Cheby polynomial order
-  param['upperK'] = stock_dat.loc[i, 'stock']               # upper K
-  param['lowerK'] = stock_dat.loc[i, 'stock']*0.05                  # lower K
+  param['upperK'] = stock_dat.loc[i, 'stock']*1.01               # upper K
+  param['lowerK'] = stock_dat.loc[i, 'stock']*0.01                  # lower K
   param['nodes'] = 500                        # number of Cheby poly nodes
   param['msy'] = stock_dat.loc[i, 'stock']/2
   param['perc'] = stock_dat.loc[i, 'prop']
-  
+
   # prepare capN
   Aspace = approxdef(param['order'],
                      param['lowerK'],
@@ -254,11 +243,12 @@ for i in range(len(stock_dat)):
     'perc': param['perc'].iat[0],
     'r': param['r'].iat[0]})
 
-  stock_retdat = pd.concat([stock_retdat, indat])
+  lst_.append(indat)
   print(i)
 
 
-stock_retdat.to_csv('data/climate_change_model_results.csv', index=False)
+stock_retdat = pd.concat(lst_)
+stock_retdat.to_csv('data/stock_change_model_results.csv', index=False)
 
 
 

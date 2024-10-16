@@ -11,11 +11,12 @@ calc_msy <- function(r, K){
 
 value_data = ddat
 calc_value <- function(value_data){
-  msy = unique(value_data$msy)
   est_price = approxfun(x = value_data$nodes, y = value_data$shadowp)
   est_stock = approxfun(x = value_data$shadowp, y = value_data$nodes)
-  msy_value = est_price(msy)*msy
-  return(c(msy_value, est_price(msy)))
+  price = est_price(unique(value_data$k))
+  stock = unique(value_data$k)
+  value = price*stock
+  return(c(price, stock, value))
 }
 
 
@@ -24,121 +25,271 @@ calc_value <- function(value_data){
 setwd("~/Projects/value_ocean_seascapes/")
 
 
-# ----------------------------------------------------
-# Get changes in upper K and msy
-# mdat = data.frame(max_y = c(76760.00, 76760.00, 76760.00, 108520.00, 108520.00, 108520.00, 108040.00, 159020.00, 159020.00),
-#                   stock_a = c(623121.00, 623121.00, 623121.00, 742967.00, 742967.00, 742967.00, 742967.00, 665441.00, 655441.00),
-#                   stock_b = c(1432000.00, 1432000.00, 1432000.00, 2228600.00, 1613855.00, 1613855.00, 1763000.00, 1858775.00, 1858775.00),
-#                   year = c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018))
-# 
-# 
-# mdat$max_y/mdat$stock_b
-# 
-# 
-# mdat <- filter(mdat, year != 2013)
-# 
-# ggplot(mdat, aes(year, stock_b)) + geom_line()
-# 
-# mod = lm(max_y ~ stock_b + year, data = mdat)
-# summary(mod)
-# 
-# predict(mod) + residuals(mod)
-# 
-# ggplot(mdat, aes(stock_b, max_y)) + geom_line() + geom_line(data=NULL, aes(stock_b, predict(mod)), color='red') + theme_minimal()
-# 
-# 
-# outdat = data.frame()
-# for (i in seq(0.50, 1, 0.01)){
-#   test_dat = data.frame(stock_b = 1858775.00*i, year = 2018)
-#   indat = data.frame(perc = i, stock_b = 1858775*i, year = 2018, max_y = (predict(mod, test_dat) + last(residuals(mod))))
-#   outdat = rbind(outdat, indat)
-#   
-# }
-# 
-# ggplot(outdat, aes(stock_b, max_y)) + geom_line()
-# 
-# write_csv(outdat, "data/est_biomass_msy.csv")
-
-# ----------------------------------------------------
-
-
-
-
-
-# ----------------------------------------------------
+# ------------------------------------------------------------------------------
 # Price Curve for 2018
-dat = read_csv("data/test.csv")
-dat = read_csv("data/model_results.csv")
-
+{
+dat = as.data.frame(read_csv("data/model_results.csv"))
 
 ddat = filter(dat, year == 2018)
 
 est_price = approxfun(x = ddat$nodes, y = ddat$shadowp)
 est_stock = approxfun(x = ddat$shadowp, y = ddat$nodes)
 
-price = est_price(1858775.00)
-stock = 1858775.00
-price*stock/1000000000
-price
+msy_price = est_price(159020.00)
+msy_stock = 159020.00
+
+fstock_price = est_price(655441)
+fstock_stock = 655441
+
 
 ggplot(ddat, aes(nodes, shadowp)) + 
-  geom_line(color="blue", size=2) + 
-  theme_minimal(20) +
+  # geom_line(color="blue", size=2) + 
+  geom_line(size=1) +
+  theme_minimal(13) +
   labs(x="Stock Size (mt)", y="Natural Capital Price") +
+  
   # MSY
   theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
-  geom_point(aes(x=stock, y=price), size=3) +
-  annotate("text", x=stock + 200000, y=price + 100, label="2018 BET \n Calibration Stock", size=6) +
-  annotate("text", x=159020 + 200000, y=price, label=paste("$", round(price, 2)), size=5) +
-  annotate("text", x=159020 + 120000, y=9450, label=paste0(stock, " mt"), size=5) +
+  geom_point(aes(x=msy_stock, y=msy_price), size=3) +
+  annotate("text", x=msy_stock + 2000, y=msy_price + 600, label="2018 MSY", size=5) +
+  annotate("text", x=msy_stock + 2000, y=msy_price + 400, label=paste("$", round(msy_price, 2)), size=4) +
+  annotate("text", x=msy_stock + 2000, y=msy_price + 200, label=paste0(msy_stock, " mt"), size=4) +
+  annotate("text", x=msy_stock + 2000, y=msy_price + 200, label=paste0(msy_stock, " mt"), size=4) +
+
+  annotate("segment", x=msy_stock, xend=msy_stock, yend=fstock_price - 500, y=msy_price, linetype="dashed") +   # Vertical line
+  annotate("segment", x=0, xend=msy_stock, y=msy_price, yend=msy_price, linetype="dashed") +      # Horizontal line
   
-  annotate("segment", x=stock, xend=stock, yend=9400, y=price, linetype="dashed") +
-  annotate("segment", x=0, xend=stock, y=price, yend=price, linetype="dashed") +
-  scale_x_continuous(expand=c(0, 0)) +
-  scale_y_continuous(expand=c(0, 0), limits=c(9400, 10200)) +
+  # Full Stock
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+  geom_point(aes(x=fstock_stock, y=fstock_price), size=3) +
+  annotate("text", x=fstock_stock - 30000, y=fstock_price + 700, label="2018 Total \n Stock", size=5) +
+  annotate("text", x=fstock_stock - 25000, y=fstock_price + 400, label=paste("$", round(fstock_price, 2)), size=4) +
+  annotate("text", x=fstock_stock - 25000, y=fstock_price + 200, label=paste0(fstock_stock, " mt"), size=4) +
+  annotate("text", x=fstock_stock - 25000, y=fstock_price + 200, label=paste0(fstock_stock, " mt"), size=4) +
+  
+  annotate("segment", x=fstock_stock, xend=fstock_stock, yend=fstock_price - 500, y=fstock_price, linetype="dashed") +   # Vertical line
+  annotate("segment", x=0, xend=fstock_stock, y=fstock_price, yend=fstock_price, linetype="dashed") +      # Horizontal line
+  
+  scale_x_continuous(expand=c(0, 0), limits=c(0, fstock_stock + 10000), labels=scales::comma, breaks=seq(0, 655441+1000, 100000)) +
+  scale_y_continuous(expand=c(0, 0), limits=c(fstock_price - 500, fstock_price + 2000)) +
   NULL
+}
 
-ggsave("~/Downloads/price_curve.png", width=8, height=6)
+ggsave("figures/Figure-1-Price-Curve.jpg", width=10, height=6)
 
 
 
 
-# ----------------------------------------------------
+# ------------------------------------------------------------------------------
 # Get changes value time
 dat = read_csv("data/model_results.csv")
 
 outdat = data.frame()
-
 for (year_ in unique(dat$year)){
   ddat = dplyr::filter(dat, year == year_)
-  vals = calc_value(ddat)[1]
-  price = calc_value(ddat)[2]
-  indat = data.frame("year" = year_, "msy_val" = vals, "price" = price)
+  price = calc_value(ddat)[1]
+  stock = calc_value(ddat)[2]
+  value = calc_value(ddat)[3]
+  indat = data.frame("year" = year_, "value" = value, "price" = price)
   outdat = rbind(outdat, indat)
 }
 
 
-outdat = outdat %>% group_by(year) %>% summarise(min_val = min(msy_val),
-                                                 max_val = max(msy_val),
-                                                 mean_val = mean(msy_val)) %>% 
-  as.data.frame()
-
-ggplot(outdat, aes(factor(year), mean_val/1000000000, group=factor(year))) + 
+ggplot(outdat, aes(factor(year), value/1000000000, group=factor(year))) + 
   geom_bar(stat='identity') +
   # geom_line(group=1) +
-  geom_text(aes(label=paste0("$", round(mean_val/1000000000, 2), "b")), nudge_y = .15, size=5) + 
+  geom_text(aes(label=paste0("$", round(value/1000000000, 2), "b")), nudge_y = .15, size=5) + 
   theme_minimal(15) +
   labs(x=NULL, y="Estimated Valuation \n ($ billion)") +
   theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) + 
   # scale_x_continuous(breaks = seq(0, 8, 1)) +
-  ylim(0, 2) +
+  scale_y_continuous(breaks = seq(0, 10), limits=c(0, 10)) +
   NULL
 
 #
-ggsave("~/Downloads/value_bars.png", width=10, height=6)
+ggsave("figures/Figure-2-Value-across-years.jpg", width=10, height=6)
 
 
 
+
+
+# ----------------------------------------------------------------- 
+# Figure - time series of prices
+dat = as.data.frame(read_csv("data/model_results.csv"))
+year_ = "2012"
+
+outdat = data.frame()
+for (year_ in unique(dat$year)){
+  ddat = filter(dat, year == year_)
+  
+  stock = unique(ddat$k)
+  msy = unique(ddat$msy)
+  
+  est_price = approxfun(x = ddat$nodes, y = ddat$shadowp)
+  est_stock = approxfun(x = ddat$shadowp, y = ddat$nodes)
+  
+  msy_price = est_price(msy)
+  fstock_price = est_price(stock)
+  indat = data.frame(year = year_, stock = stock, msy = msy, msy_price = msy_price, fstock_price = fstock_price)
+  outdat = rbind(outdat, indat)
+}
+
+range(outdat$fstock_price)
+
+outdat = outdat %>% select(year, msy_price, fstock_price) %>% gather(key = var, value = value, -year)
+
+outdat$var = factor(outdat$var, levels = c("msy_price", "fstock_price"), labels = c("MSY Price", "Total Stock Price"))
+outdat$var
+
+ggplot(outdat, aes(year, value, linetype=var)) + 
+  geom_line() +
+  theme_minimal(14) +
+  theme(panel.border = element_rect(colour = "grey", fill=NA, size=1),
+        legend.position = "none") +
+  labs(x=NULL, y="Natural Capital Price") +
+  annotate("text", x=2013, y=12000, label="MSY Price") +
+  annotate("text", x=2012.5, y=9000, label="Stock Price") +
+  scale_x_continuous(breaks = seq(2010, 2018)) +
+  NULL
+
+ggsave("figures/Figure-3-Natural-Capital-Price-Timeseries.jpg", width=10, height=6)
+
+
+
+
+# ------------------------------------------------------------------------------
+# Decline in stock change
+dat = read_csv("data/stock_change_model_results.csv")
+
+
+rdat = data.frame()
+for (perc_ in c(0.50, 0.75, 1.00, 1.25, 1.50)){
+  print(perc_)
+  mdat = filter(dat, perc == as.character(perc_))
+  
+  est_price = approxfun(x = mdat$nodes, y = mdat$shadowp)
+  est_stock = approxfun(x = mdat$shadowp, y = mdat$nodes)
+  
+  price = est_price(655441*perc_)
+  stock = 655441*perc_
+  cap_ex = price*stock
+  
+  indat = data.frame(perc = perc_,
+                     est_price = price,
+                     stock = stock,
+                     cap_ex = cap_ex)
+  
+  rdat = rbind(rdat, indat)
+}
+rdat
+
+
+baseline_cap_ex = filter(rdat, perc == 1.00)$cap_ex
+rdat$perc_from_baseline = (rdat$cap_ex - baseline_cap_ex) / baseline_cap_ex
+
+rdat$perc = factor(rdat$perc, levels = c(0.5, 0.75, 1, 1.25, 1.50), labels=c("-50%", "-25%", "2018 Baseline", "+25%", "+50%"))
+
+ggplot(rdat, aes(factor(perc), cap_ex/1000000000)) + 
+  theme_minimal(14) + 
+  geom_bar(stat='identity') +
+  labs(x="Change from baseline stock", y="Total Capital Expenditure ($ Billion)") +
+  theme(panel.border = element_rect(colour = "grey", fill=NA, size=1)) +
+  geom_text(aes(label=paste0("$", round(cap_ex/1000000000, 2), "b")), nudge_y = .35, size=5) + 
+  NULL
+
+
+ggsave("figures/Figure-3-Change-from-baseline.jpg", width=10, height=6)
+
+
+
+# Sensitivity around years
+
+dat = read_csv("data/model_results.csv")
+
+outdat = data.frame()
+for (year_ in unique(dat$year)){
+  ddat = filter(dat, year == year_)
+  stock = unique(ddat$k)
+  msy = unique(ddat$msy)
+  
+  est_price = approxfun(x = ddat$nodes, y = ddat$shadowp)
+  est_stock = approxfun(x = ddat$shadowp, y = ddat$nodes)
+  
+  msy_price = est_price(msy)
+  fstock_price = est_price(stock)
+  indat = data.frame(year = year_, stock = stock, msy = msy, msy_price = msy_price, fstock_price = fstock_price)
+  outdat = rbind(outdat, indat)
+  
+}
+
+ggplot(dat, aes(nodes, shadowp)) + 
+  geom_point(data=outdat, aes(stock, fstock_price)) +
+  geom_point(data=outdat, aes(msy, msy_price)) +
+  geom_text(data=outdat, aes(msy, msy_price, label=paste0("MSY \n $", round(msy_price, 0))), inherit.aes = FALSE, nudge_x = 100000, nudge_y=1000) +
+  geom_text(data=outdat, aes(stock, fstock_price, label=paste0("Stock \n $", round(fstock_price, 0))), inherit.aes = FALSE, nudge_x=-30000, nudge_y = 1000) +
+  geom_line(size=1) +
+  theme_minimal(13) +
+  theme(panel.border = element_rect(colour = "grey", fill=NA, size=1)) +
+  labs(x="Stock Size (mt)", y="Natural Capital Asset Price") +
+  xlim(0, 750000) +
+  ylim(8000, 14000) +
+  facet_wrap(~year)
+
+ggsave("figures/Figure-4-Annual-price-curves.jpg", width=10, height=8)
+
+#
+
+
+
+# ---- NOT WORKING
+# Aggregate results
+
+ddat = as.data.frame(read_csv("data/agg_model_results.csv"))
+
+est_price = approxfun(x = ddat$nodes, y = ddat$shadowp)
+est_stock = approxfun(x = ddat$shadowp, y = ddat$nodes)
+
+price = est_price(unique(ddat$upperK))
+stock = unique(ddat$upperK)
+
+price
+stock
+
+ggplot(ddat, aes(nodes, shadowp)) + 
+  geom_line(color="blue", size=2) +
+  # geom_line(size=1) +
+  theme_minimal(13) +
+  labs(x="Stock Size (mt)", y="Natural Capital Price") +
+  # MSY
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+  geom_point(aes(x=stock, y=price), size=3, color='red') +
+  annotate("text", x=stock + 2000, y=price + 700, label="2018 BET \n Stock", size=5) +
+  annotate("text", x=stock + 2000, y=price + 400, label=paste("$", round(price, 2)), size=4) +
+  annotate("text", x=stock + 2000, y=price + 200, label=paste0(stock, " mt"), size=4) +
+  annotate("text", x=stock + 2000, y=price + 200, label=paste0(stock, " mt"), size=4) +
+  
+  # 9479.87
+  
+  annotate("segment", x=stock, xend=stock, yend=price - 500, y=price, linetype="dashed") +   # Vertical line
+  annotate("segment", x=0, xend=stock, y=price, yend=price, linetype="dashed") +      # Horizontal line
+  scale_x_continuous(expand=c(0, 0), limits=c(0, stock + 100000)) +
+  scale_y_continuous(expand=c(0, 0), limits=c(price - 100, price + 2000)) +
+  NULL
+
+  #
+
+
+
+
+
+
+
+
+
+
+
+# ----------------------------------------------------------------
+# Climate change results ---- not in use
 
 # ----------------------------------------------------
 cc_dat = read_csv('data/climate_change_model_results.csv')
