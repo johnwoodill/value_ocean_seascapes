@@ -22,7 +22,7 @@ calc_value <- function(value_data){
 
 
 
-setwd("~/Projects/value_ocean_seascapes/")
+setwd("~/Repos/value_ocean_seascapes/")
 
 
 # ------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ ggplot(ddat, aes(nodes, shadowp)) +
   NULL
 }
 
-ggsave("figures/Figure-1-Price-Curve.jpg", width=10, height=6)
+# ggsave("figures/Figure-1-Price-Curve.jpg", width=10, height=6)
 
 
 
